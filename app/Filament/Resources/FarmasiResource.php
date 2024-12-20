@@ -63,6 +63,11 @@ class FarmasiResource extends Resource
                         ->leftJoin('inventory.harga_barang', 'inventory.harga_barang.ID', '=', 'pembayaran.rincian_tagihan.TARIF_ID')
                         ->leftJoin('inventory.barang', 'inventory.barang.ID', '=', 'inventory.harga_barang.BARANG')
                         ->leftJoin('pembayaran.tagihan', 'pembayaran.tagihan.ID', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
+                        ->leftJoin('pembayaran.tagihan_pendaftaran', 'pembayaran.tagihan_pendaftaran.TAGIHAN', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
+                        ->leftJoin('pendaftaran.tujuan_pasien', 'pendaftaran.tujuan_pasien.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
+                        ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', 'pendaftaran.tujuan_pasien.RUANGAN')
+                        // ->leftJoin('master.ruangan', 'master.ruangan.ID', 'LIKE', DB::raw())
+                        ->leftJoin('pendaftaran.penjamin', 'pendaftaran.penjamin.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
                         ->select(
                             'pembayaran.rincian_tagihan.REF_ID as TAGIHAN',
                             'inventory.barang.NAMA as nama_tarif',
@@ -70,21 +75,53 @@ class FarmasiResource extends Resource
                             'pembayaran.rincian_tagihan.JUMLAH as jumlah',
                             'pembayaran.rincian_tagihan.TARIF as tarif',
                             'pembayaran.tagihan.TANGGAL as tanggal',
+                            'master.ruangan.DESKRIPSI as ruangan',
+                            DB::raw("SUM(pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF) as pendapatan"),
+                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 1 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as umum"),
+                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 2 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as bpjs"),
+                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 7 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as asuransi_karyawan"),
+                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 8 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_raharja"),
+                            // DB::raw("SUM(case when master.ruangan.ID LIKE '%11102%' then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as irna"),
+                            // DB::raw("SUM(case when master.ruangan.ID LIKE '%11103%' then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as igd"),
+                            // DB::raw("SUM(case when master.ruangan.ID LIKE '%11101%' then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as irjas"),
+                            // DB::raw("SUM(case when master.ruangan.ID LIKE '%11301%' then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as irjau"),
                         )
-                        ->where('pembayaran.rincian_tagihan.COA', 0)
+                        // ->where('pembayaran.rincian_tagihan.COA', 0)
                         ->where('pembayaran.rincian_tagihan.JENIS', 4)
+                        ->groupBy('ruangan')
                         ->orderBy('pembayaran.rincian_tagihan.TAGIHAN', 'DESC');
                 }
             )
             ->columns([
-                TextColumn::make('nama_tarif')
-                    ->label('Nama Tarif'),
-                TextColumn::make('jumlah')
-                    ->label('Jumlah'),
-                TextColumn::make('tarif')
-                    ->label('Tarif'),
-                TextColumn::make('tanggal')
-                    ->label('Tanggal'),
+                TextColumn::make('ruangan')
+                    ->label('Ruangan'),
+                TextColumn::make('pendapatan')
+                    ->label('Pendapatan')
+                    ->money('IDR'),
+                TextColumn::make('umum')
+                    ->label('Umum')
+                    ->money('IDR'),
+                TextColumn::make('bpjs')
+                    ->label('BPJS')
+                    ->money('IDR'),
+                TextColumn::make('asuransi_karyawan')
+                    ->label('Karyawan')
+                    ->money('IDR'),
+                TextColumn::make('jasa_raharja')
+                    ->label('Jasa Raharja')
+                    ->money('IDR'),
+                // TextColumn::make('igd')
+                //     ->label('IGD')
+                //     ->money('IDR'),
+                // TextColumn::make('irjau')
+                //     ->label('Rawat Jalan')
+                //     ->getStateUsing(fn($record) => $record->irjau + $record->irjas)
+                //     ->money('IDR'),
+                // TextColumn::make('nama_tarif'),
+                // TextColumn::make('jumlah'),
+                // TextColumn::make('tarif'),
+                // TextColumn::make('ruangan'),
+
             ])
             ->filters([
                 Filter::make('created_at')
@@ -106,63 +143,63 @@ class FarmasiResource extends Resource
             ])
             ->actions([])
             ->bulkActions([
-                BulkAction::make('coa')
-                    ->label('Buat COA')
-                    ->color('success')
-                    ->icon('heroicon-o-paper-airplane')
-                    ->form([
-                        Select::make('coa')
-                            ->label('NAMA AKUN')
-                            ->options(COA::query()->pluck('DESKRIPSI', 'ID_COA'))
-                            ->searchable()
-                            ->required(),
-                        TextInput::make('debit')
-                            ->label('DEBIT')
-                            ->numeric()
-                            ->default(0),
-                        TextInput::make('kredit')
-                            ->label('KREDIT')
-                            ->numeric()
-                            ->default(
-                                fn($livewire) => self::totalKredit($livewire->selectedTableRecords)
-                            )
-                    ])
-                    ->action(function ($livewire, Array $data) { {
-                            // dd($livewire->selectedTableRecords);
-                            try {
-                                foreach ($livewire->selectedTableRecords as $record) {
-                                    // dd($record);
-                                    DB::connection('simgos')
-                                        ->table('rincian_tagihan')
-                                        ->where('JENIS', 4)
-                                        ->where('REF_ID', $record)
-                                        ->update([
-                                            'COA' => 1
-                                        ]);
-                                }
+                // BulkAction::make('coa')
+                //     ->label('Buat COA')
+                //     ->color('success')
+                //     ->icon('heroicon-o-paper-airplane')
+                //     ->form([
+                //         Select::make('coa')
+                //             ->label('NAMA AKUN')
+                //             ->options(COA::query()->pluck('DESKRIPSI', 'ID_COA'))
+                //             ->searchable()
+                //             ->required(),
+                //         TextInput::make('debit')
+                //             ->label('DEBIT')
+                //             ->numeric()
+                //             ->default(0),
+                //         TextInput::make('kredit')
+                //             ->label('KREDIT')
+                //             ->numeric()
+                //             ->default(
+                //                 fn($livewire) => self::totalKredit($livewire->selectedTableRecords)
+                //             )
+                //     ])
+                //     ->action(function ($livewire, Array $data) { {
+                //             dd($livewire->selectedTableRecords);
+                //             try {
+                //                 // foreach ($livewire->selectedTableRecords as $record) {
+                //                     // // dd($record);
+                //                     // DB::connection('simgos')
+                //                     //     ->table('rincian_tagihan')
+                //                     //     ->where('JENIS', 4)
+                //                     //     ->where('REF_ID', $record)
+                //                     //     ->update([
+                //                     //         'COA' => 1
+                //                     //     ]);
+                //                 // }
 
-                                JurnalUmum::create([
-                                    'kode_coa' => $data['coa'],
-                                    'kredit' => $data['kredit'],
-                                    'debit' => $data['debit'],
-                                    'tanggal' => Carbon::now('Asia/Jakarta'),
-                                ]);
+                //                 JurnalUmum::create([
+                //                     'kode_coa' => $data['coa'],
+                //                     'kredit' => $data['kredit'],
+                //                     'debit' => $data['debit'],
+                //                     'tanggal' => Carbon::now('Asia/Jakarta'),
+                //                 ]);
 
-                                Notification::make()
-                                    ->title('Berhasil Disimpan!')
-                                    ->success()
-                                    ->send();
+                //                 Notification::make()
+                //                     ->title('Berhasil Disimpan!')
+                //                     ->success()
+                //                     ->send();
 
-                                return redirect('/keuangan/farmasis');
-                            } catch (\Throwable $th) {
-                                Notification::make()
-                                    ->title('Gagal Simpan!')
-                                    ->body($th->getMessage())
-                                    ->danger()
-                                    ->send();
-                            }
-                        }
-                    })
+                //                 return redirect('/keuangan/farmasis');
+                //             } catch (\Throwable $th) {
+                //                 Notification::make()
+                //                     ->title('Gagal Simpan!')
+                //                     ->body($th->getMessage())
+                //                     ->danger()
+                //                     ->send();
+                //             }
+                //         }
+                //     })
             ]);
     }
 
@@ -180,21 +217,9 @@ class FarmasiResource extends Resource
         ];
     }
 
-    public static function totalKredit(Array $data)
+    public static function totalKredit(array $data)
     {
-        $total = array();
-        foreach ($data as $record) {
-            $data = DB::connection('simgos')
-                ->table('rincian_tagihan')
-                ->where('JENIS', 4)
-                ->where('REF_ID', $record)
-                ->first();
 
-            $harga = $data->JUMLAH * $data->TARIF;
-
-            array_push($total, $harga);
-        }
-
-        return array_sum($total);
+        return array_sum($data);
     }
 }
