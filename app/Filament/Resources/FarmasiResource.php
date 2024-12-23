@@ -18,7 +18,9 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
@@ -26,6 +28,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class FarmasiResource extends Resource
 {
@@ -76,6 +79,7 @@ class FarmasiResource extends Resource
                             'pembayaran.rincian_tagihan.TARIF as tarif',
                             'pembayaran.tagihan.TANGGAL as tanggal',
                             'master.ruangan.DESKRIPSI as ruangan',
+                            'master.ruangan.ID as id_ruangan',
                             DB::raw("SUM(pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF) as pendapatan"),
                             DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 1 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as umum"),
                             DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 2 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as bpjs"),
@@ -88,8 +92,8 @@ class FarmasiResource extends Resource
                         )
                         // ->where('pembayaran.rincian_tagihan.COA', 0)
                         ->where('pembayaran.rincian_tagihan.JENIS', 4)
-                        ->groupBy('ruangan')
-                        ->orderBy('pembayaran.rincian_tagihan.TAGIHAN', 'DESC');
+                        ->groupBy('master.ruangan.DESKRIPSI')
+                        ->orderBy('master.ruangan.ID', 'DESC');
                 }
             )
             ->columns([
@@ -97,19 +101,24 @@ class FarmasiResource extends Resource
                     ->label('Ruangan'),
                 TextColumn::make('pendapatan')
                     ->label('Pendapatan')
-                    ->money('IDR'),
+                    ->money('IDR')
+                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
                 TextColumn::make('umum')
                     ->label('Umum')
-                    ->money('IDR'),
+                    ->money('IDR')
+                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
                 TextColumn::make('bpjs')
                     ->label('BPJS')
-                    ->money('IDR'),
+                    ->money('IDR')
+                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
                 TextColumn::make('asuransi_karyawan')
                     ->label('Karyawan')
-                    ->money('IDR'),
+                    ->money('IDR')
+                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
                 TextColumn::make('jasa_raharja')
                     ->label('Jasa Raharja')
-                    ->money('IDR'),
+                    ->money('IDR')
+                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
                 // TextColumn::make('igd')
                 //     ->label('IGD')
                 //     ->money('IDR'),
@@ -140,8 +149,29 @@ class FarmasiResource extends Resource
                                 fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '<=', $date),
                             );
                     })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['tanggal_awal'] ?? null) {
+                            $indicators['tanggal_awal'] = 'Order from ' . Carbon::parse($data['tanggal_awal'])->toFormattedDateString();
+                        }
+                        if ($data['tanggal_akhir'] ?? null) {
+                            $indicators['tanggal_akhir'] = 'Order until ' . Carbon::parse($data['tanggal_akhir'])->toFormattedDateString();
+                        }
+
+                        return $indicators;
+                    }),
             ])
-            ->actions([])
+            ->actions([
+                // Action::make('add_coa')
+                //     ->label('Tambah COA')
+                //     ->color('success')
+                //     ->icon('heroicon-o-plus-circle')
+                //     ->action(function ($record) {
+                //         // Add logging to see if this part is reached
+                //         Log::info('Action triggered for record: ', ['record' => $record]);
+                //         dd($record);
+                //     })
+            ])
             ->bulkActions([
                 // BulkAction::make('coa')
                 //     ->label('Buat COA')
