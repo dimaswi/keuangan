@@ -46,6 +46,7 @@ class RadiologiResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated(false)
             ->recordUrl(
                 function () {
                     return null;
@@ -72,7 +73,8 @@ class RadiologiResource extends Resource
                             DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 8 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_raharja"),
                         )
                         ->where('master.tindakan.JENIS', 7)
-                        ->where('pembayaran.rincian_tagihan.JENIS', 3,)
+                        ->where('pembayaran.rincian_tagihan.JENIS', 3)
+                        ->where('pembayaran.tagihan.STATUS',2)
                         ->groupBy('master.ruangan.DESKRIPSI');
                 }
             )
@@ -125,12 +127,8 @@ class RadiologiResource extends Resource
                         return $indicators;
                     }),
             ])
-            ->actions([
-
-            ])
-            ->bulkActions([
-
-            ]);
+            ->actions([])
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

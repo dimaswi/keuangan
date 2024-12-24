@@ -55,6 +55,7 @@ class FarmasiResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated(false)
             ->recordUrl(
                 function () {
                     return null;
@@ -92,6 +93,7 @@ class FarmasiResource extends Resource
                         )
                         // ->where('pembayaran.rincian_tagihan.COA', 0)
                         ->where('pembayaran.rincian_tagihan.JENIS', 4)
+                        ->where('pembayaran.tagihan.STATUS',2)
                         ->groupBy('master.ruangan.DESKRIPSI')
                         ->orderBy('master.ruangan.ID', 'DESC');
                 }

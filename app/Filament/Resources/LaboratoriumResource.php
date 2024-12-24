@@ -46,6 +46,7 @@ class LaboratoriumResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated(false)
             ->recordUrl(
                 function () {
                     return null;
@@ -72,7 +73,8 @@ class LaboratoriumResource extends Resource
                             DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 8 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_raharja"),
                         )
                         ->where('master.tindakan.JENIS', 8)
-                        ->where('pembayaran.rincian_tagihan.JENIS', 3,)
+                        ->where('pembayaran.rincian_tagihan.JENIS', 3)
+                        ->where('pembayaran.tagihan.STATUS',2)
                         ->groupBy('master.ruangan.DESKRIPSI');
                 }
             )
