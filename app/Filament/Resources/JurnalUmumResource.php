@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -37,18 +38,24 @@ class JurnalUmumResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('coa.ID_COA')
+                    ->badge()
+                    ->label('Kode Akun'),
+                TextColumn::make('coa.DESKRIPSI')
+                    ->label('Nama Akun'),
+                TextColumn::make('debit')
+                    ->money('IDR'),
+                TextColumn::make('kredit')
+                    ->money('IDR'),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
             ]);
     }
 

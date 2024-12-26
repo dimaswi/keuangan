@@ -18,6 +18,12 @@ class JurnalUmum extends Model
         'kode_coa',
         'kredit',
         'debit',
-        'tanggal',
+        'periode_awal',
+        'periode_akhir',
     ];
+
+    public function coa()
+    {
+        return $this->belongsTo(COA::class, 'kode_coa', 'ID_COA');
+    }
 }
