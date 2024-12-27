@@ -7,6 +7,9 @@ use App\Filament\Resources\RawatJalanResource\RelationManagers;
 use App\Models\Pendapatan;
 use App\Models\RawatJalan;
 use App\Models\Rincian;
+use App\Tables\Columns\Yanmed\PendapatanColumn;
+use App\Tables\Columns\Yanmed\RuanganColumn;
+use App\Tables\Columns\Yanmed\TotalColumn;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -68,12 +71,15 @@ class RawatJalanResource extends Resource
                             // 'master.tindakan.NAMA as nama_tindakan',
                             'master.ruangan.DESKRIPSI as ruangan',
                             DB::raw("SUM(pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF) as pendapatan"),
-                            DB::raw("SUM(case when master.tindakan.NAMA LIKE '%JASA PERIKSA%' then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_periksa"),
-                            DB::raw("SUM(case when master.tindakan.JENIS != 4 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_pelayanan"),
-                            DB::raw("SUM(case when pembayaran.rincian_tagihan.JENIS = 1 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as karcis"),
+                            DB::raw("SUM(case when (master.tindakan.NAMA LIKE '%JASA PERIKSA%' and pendaftaran.penjamin.JENIS = 1) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_periksa_umum"),
+                            DB::raw("SUM(case when (master.tindakan.JENIS != 4 and pendaftaran.penjamin.JENIS = 1) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_pelayanan_umum"),
+                            DB::raw("SUM(case when (pembayaran.rincian_tagihan.JENIS = 1 and pendaftaran.penjamin.JENIS = 1) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as karcis_umum"),
+                            DB::raw("SUM(case when (master.tindakan.NAMA LIKE '%JASA PERIKSA%' and pendaftaran.penjamin.JENIS = 2) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_periksa_bpjs"),
+                            DB::raw("SUM(case when (master.tindakan.JENIS != 4 and pendaftaran.penjamin.JENIS = 2) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_pelayanan_bpjs"),
+                            DB::raw("SUM(case when (pembayaran.rincian_tagihan.JENIS = 1 and pendaftaran.penjamin.JENIS = 2) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as karcis_bpjs"),
                             // DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 8 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_raharja"),
-                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 1 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as umum"),
-                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 2 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as bpjs"),
+                            // DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 1 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as umum"),
+                            // DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 2 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as bpjs"),
                             // DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 7 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as asuransi_karyawan"),
                             // DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 8 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_raharja"),
                         )
@@ -87,38 +93,40 @@ class RawatJalanResource extends Resource
                         // ->where('pendaftaran.tujuan_pasien.RUANGAN', 'LIKE', '%'.'11101'.'%')
                         // ->orWhere('pendaftaran.tujuan_pasien.RUANGAN', 'LIKE', '%'.'11301'.'%');
                         ->groupBy('master.ruangan.DESKRIPSI')
+                        ->orderBy('pendapatan', 'desc')
                     ;
                 }
             )
             ->columns([
                 // TextColumn::make('TAGIHAN'),
                 // TextColumn::make('nama_tindakan'),
-                TextColumn::make('ruangan'),
+                RuanganColumn::make('Unit')->label('Rincian'),
+                PendapatanColumn::make('Rincian')->label(' '),
                 // TextColumn::make('tarif'),
-                TextColumn::make('karcis')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('jasa_periksa')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('jasa_pelayanan')
-                    ->formatStateUsing(function ($state, Rincian $rincian) {
-                        return 'IDR ' . number_format($rincian->jasa_pelayanan - $rincian->karcis) . '.00';
-                    })
+                // TextColumn::make('karcis')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('jasa_periksa')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('jasa_pelayanan')
+                //     ->formatStateUsing(function ($state, Rincian $rincian) {
+                //         return 'IDR ' . number_format($rincian->jasa_pelayanan - $rincian->karcis) . '.00';
+                //     })
+                //     // ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('umum')
+                //     ->label('UMUM')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('bpjs')
+                //     ->label('BPJS')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                TotalColumn::make('pendapatan')
+                    // ->label('Total Pendapatan')
                     // ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('umum')
-                    ->label('UMUM')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('bpjs')
-                    ->label('BPJS')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('pendapatan')
-                    ->label('Total Pendapatan')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                    // ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
             ])
             ->filters([
                 Filter::make('created_at')

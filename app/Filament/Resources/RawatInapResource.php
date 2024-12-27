@@ -93,7 +93,7 @@ class RawatInapResource extends Resource
                 TextColumn::make('karcis')
                     ->money('IDR')
                     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('jasa_periksa')
+                TextColumn::make('visite')
                     ->money('IDR')
                     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
                 TextColumn::make('jasa_pelayanan')

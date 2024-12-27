@@ -7,6 +7,9 @@ use App\Filament\Resources\RadiologiResource\RelationManagers;
 use App\Models\Pendapatan;
 use App\Models\Radiologi;
 use App\Models\Rincian;
+use App\Tables\Columns\Jangmed\PendapatanColumn;
+use App\Tables\Columns\Jangmed\RuanganColumn;
+use App\Tables\Columns\Jangmed\TotalColumn;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -61,7 +64,8 @@ class RadiologiResource extends Resource
                         ->leftJoin('pembayaran.tagihan', 'pembayaran.tagihan.ID', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
                         ->leftJoin('pendaftaran.tujuan_pasien', 'pendaftaran.tujuan_pasien.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
                         ->leftJoin('pendaftaran.penjamin', 'pendaftaran.penjamin.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
-                        ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', 'pendaftaran.tujuan_pasien.RUANGAN')
+                        // ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', 'pendaftaran.tujuan_pasien.RUANGAN')
+                        ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', DB::raw("SUBSTR(pendaftaran.tujuan_pasien.RUANGAN,1,5)"))
                         ->select(
                             'pembayaran.rincian_tagihan.TAGIHAN as TAGIHAN',
                             'master.tindakan.NAMA as nama_tindakan',
@@ -79,24 +83,27 @@ class RadiologiResource extends Resource
                 }
             )
             ->columns([
-                TextColumn::make('ruangan')
-                    ->label('Nama Ruangan'),
-                TextColumn::make('umum')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('bpjs')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('asuransi_karyawan')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('jasa_raharja')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('pendapatan')
-                    ->label('Total Pendapatan')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                RuanganColumn::make('rincian'),
+                PendapatanColumn::make('pendapatan')->label(' '),
+                TotalColumn::make('total')->label('Pendapatan'),
+                // TextColumn::make('ruangan')
+                //     ->label('Nama Ruangan'),
+                // TextColumn::make('umum')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('bpjs')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('asuransi_karyawan')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('jasa_raharja')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('pendapatan')
+                //     ->label('Total Pendapatan')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
             ])
             ->filters([
                 Filter::make('created_at')

@@ -9,6 +9,9 @@ use App\Models\Farmasi;
 use App\Models\JurnalUmum;
 use App\Models\Pendapatan;
 use App\Models\Rincian;
+use App\Tables\Columns\Jangmed\PendapatanColumn;
+use App\Tables\Columns\Jangmed\RuanganColumn;
+use App\Tables\Columns\Jangmed\TotalColumn;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -69,7 +72,8 @@ class FarmasiResource extends Resource
                         ->leftJoin('pembayaran.tagihan', 'pembayaran.tagihan.ID', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
                         ->leftJoin('pembayaran.tagihan_pendaftaran', 'pembayaran.tagihan_pendaftaran.TAGIHAN', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
                         ->leftJoin('pendaftaran.tujuan_pasien', 'pendaftaran.tujuan_pasien.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
-                        ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', 'pendaftaran.tujuan_pasien.RUANGAN')
+                        // ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', 'pendaftaran.tujuan_pasien.RUANGAN')
+                        ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', DB::raw("SUBSTR(pendaftaran.tujuan_pasien.RUANGAN,1,5)"))
                         // ->leftJoin('master.ruangan', 'master.ruangan.ID', 'LIKE', DB::raw())
                         ->leftJoin('pendaftaran.penjamin', 'pendaftaran.penjamin.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
                         ->select(
@@ -81,6 +85,7 @@ class FarmasiResource extends Resource
                             'pembayaran.tagihan.TANGGAL as tanggal',
                             'master.ruangan.DESKRIPSI as ruangan',
                             'master.ruangan.ID as id_ruangan',
+                            // DB::raw("")
                             DB::raw("SUM(pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF) as pendapatan"),
                             DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 1 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as umum"),
                             DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 2 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as bpjs"),
@@ -99,28 +104,31 @@ class FarmasiResource extends Resource
                 }
             )
             ->columns([
-                TextColumn::make('ruangan')
-                    ->label('Ruangan'),
-                TextColumn::make('pendapatan')
-                    ->label('Pendapatan')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('umum')
-                    ->label('Umum')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('bpjs')
-                    ->label('BPJS')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('asuransi_karyawan')
-                    ->label('Karyawan')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
-                TextColumn::make('jasa_raharja')
-                    ->label('Jasa Raharja')
-                    ->money('IDR')
-                    ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                RuanganColumn::make('rincian'),
+                PendapatanColumn::make('pendapatan')->label(' '),
+                TotalColumn::make('total')->label('Pendapatan')
+                // TextColumn::make('ruangan')
+                //     ->label('Ruangan'),
+                // TextColumn::make('pendapatan')
+                //     ->label('Pendapatan')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('umum')
+                //     ->label('Umum')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('bpjs')
+                //     ->label('BPJS')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('asuransi_karyawan')
+                //     ->label('Karyawan')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // TextColumn::make('jasa_raharja')
+                //     ->label('Jasa Raharja')
+                //     ->money('IDR')
+                //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
                 // TextColumn::make('igd')
                 //     ->label('IGD')
                 //     ->money('IDR'),
@@ -132,7 +140,6 @@ class FarmasiResource extends Resource
                 // TextColumn::make('jumlah'),
                 // TextColumn::make('tarif'),
                 // TextColumn::make('ruangan'),
-
             ])
             ->filters([
                 Filter::make('created_at')
