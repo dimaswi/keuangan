@@ -16,6 +16,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -58,7 +59,10 @@ class RadiologiResource extends Resource
             ->modifyQueryUsing(
                 function (Builder $query): Builder {
                     return $query
-                        ->leftJoin('master.tarif_tindakan', 'pembayaran.rincian_tagihan.TARIF_ID', '=', 'master.tarif_tindakan.ID')
+                        ->leftJoin('master.tarif_tindakan', function ($join) {
+                            $join->on('pembayaran.rincian_tagihan.TARIF_ID', '=', 'master.tarif_tindakan.ID')
+                                ->where('pembayaran.rincian_tagihan.JENIS', 3);
+                        })
                         ->leftJoin('master.tindakan', 'master.tarif_tindakan.TINDAKAN', '=', 'master.tindakan.ID')
                         ->leftJoin('pembayaran.tagihan_pendaftaran', 'pembayaran.tagihan_pendaftaran.TAGIHAN', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
                         ->leftJoin('pembayaran.tagihan', 'pembayaran.tagihan.ID', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
@@ -70,16 +74,18 @@ class RadiologiResource extends Resource
                             'pembayaran.rincian_tagihan.TAGIHAN as TAGIHAN',
                             'master.tindakan.NAMA as nama_tindakan',
                             'master.ruangan.DESKRIPSI as ruangan',
-                            DB::raw("SUM(pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF) as pendapatan"),
-                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 1 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as umum"),
-                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 2 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as bpjs"),
-                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 7 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as asuransi_karyawan"),
-                            DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 8 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_raharja"),
+                            DB::raw("SUM(case when master.tindakan.JENIS = 7 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as pendapatan"),
+                            DB::raw("SUM(case when (pembayaran.rincian_tagihan.JENIS = 1 )  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as karcis"),
+                            DB::raw("SUM(case when (pendaftaran.penjamin.JENIS = 1 and master.tindakan.JENIS = 7 )  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as umum"),
+                            DB::raw("SUM(case when (pendaftaran.penjamin.JENIS = 2 and master.tindakan.JENIS = 7 )  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as bpjs"),
+                            DB::raw("SUM(case when (pendaftaran.penjamin.JENIS = 7 and master.tindakan.JENIS = 7 )  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as asuransi_karyawan"),
+                            DB::raw("SUM(case when (pendaftaran.penjamin.JENIS = 8 and master.tindakan.JENIS = 7 ) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_raharja"),
                         )
-                        ->where('master.tindakan.JENIS', 7)
                         ->where('pembayaran.rincian_tagihan.JENIS', 3)
-                        ->where('pembayaran.tagihan.STATUS',2)
-                        ->groupBy('master.ruangan.DESKRIPSI');
+                        ->where('master.tindakan.JENIS', 7)
+                        ->where('pembayaran.tagihan.STATUS', 2)
+                        ->groupBy('master.ruangan.DESKRIPSI')
+                    ;
                 }
             )
             ->columns([
@@ -134,7 +140,9 @@ class RadiologiResource extends Resource
                         return $indicators;
                     }),
             ])
-            ->actions([])
+            ->actions([
+
+            ])
             ->bulkActions([]);
     }
 

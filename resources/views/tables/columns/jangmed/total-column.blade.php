@@ -4,9 +4,19 @@
         {{-- Rp. {{ number_format($getRecord()->pendapatan) }} --}}&nbsp;
     </div>
 
+    @if ($getRecord()->ruangan == 'Laboratorium' && url()->current() == url('/keuangan/laboratoria'))
+    <div style="font-size: 20px; font-weight: bold">
+        Rp. {{ number_format($getRecord()->pendapatan + $getRecord()->karcis) }}.00
+    </div>
+    @elseif ($getRecord()->ruangan == 'Radiologi' && url()->current() == url('/keuangan/radiologis'))
+    <div style="font-size: 20px; font-weight: bold">
+        Rp. {{ number_format($getRecord()->pendapatan + $getRecord()->karcis) }}.00
+    </div>
+    @else
     <div style="font-size: 20px; font-weight: bold">
         Rp. {{ number_format($getRecord()->pendapatan) }}.00
     </div>
+    @endif
 
     <div style="font-size: 14px">
         <div style="margin-left: 20px;">

@@ -72,8 +72,8 @@ class FarmasiResource extends Resource
                         ->leftJoin('pembayaran.tagihan', 'pembayaran.tagihan.ID', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
                         ->leftJoin('pembayaran.tagihan_pendaftaran', 'pembayaran.tagihan_pendaftaran.TAGIHAN', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
                         ->leftJoin('pendaftaran.tujuan_pasien', 'pendaftaran.tujuan_pasien.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
-                        // ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', 'pendaftaran.tujuan_pasien.RUANGAN')
-                        ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', DB::raw("SUBSTR(pendaftaran.tujuan_pasien.RUANGAN,1,5)"))
+                        ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', 'pendaftaran.tujuan_pasien.RUANGAN')
+                        // ->leftJoin('master.ruangan', 'master.ruangan.ID', '=', DB::raw("SUBSTR(pendaftaran.tujuan_pasien.RUANGAN,1,5)"))
                         // ->leftJoin('master.ruangan', 'master.ruangan.ID', 'LIKE', DB::raw())
                         ->leftJoin('pendaftaran.penjamin', 'pendaftaran.penjamin.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
                         ->select(
