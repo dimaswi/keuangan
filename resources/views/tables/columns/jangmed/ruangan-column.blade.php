@@ -6,6 +6,10 @@
 
         <div style="font-size: 14px">
             <div style="margin-left: 30px;">
+                &#8594; Pendapatan Karcis
+            </div>
+
+            <div style="margin-left: 30px;">
                 &#8594; Pendapatan Pasien Umum
             </div>
 

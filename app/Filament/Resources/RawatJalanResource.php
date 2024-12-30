@@ -16,11 +16,13 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
 
@@ -72,10 +74,10 @@ class RawatJalanResource extends Resource
                             'master.ruangan.DESKRIPSI as ruangan',
                             DB::raw("SUM(pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF) as pendapatan"),
                             DB::raw("SUM(case when (master.tindakan.NAMA LIKE '%JASA PERIKSA%' and pendaftaran.penjamin.JENIS = 1) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_periksa_umum"),
-                            DB::raw("SUM(case when (master.tindakan.JENIS != 4 and pendaftaran.penjamin.JENIS = 1) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_pelayanan_umum"),
+                            DB::raw("SUM(case when (master.tindakan.JENIS != 4 and pendaftaran.penjamin.JENIS = 1 and pembayaran.rincian_tagihan.JENIS != 1) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_pelayanan_umum"),
                             DB::raw("SUM(case when (pembayaran.rincian_tagihan.JENIS = 1 and pendaftaran.penjamin.JENIS = 1) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as karcis_umum"),
                             DB::raw("SUM(case when (master.tindakan.NAMA LIKE '%JASA PERIKSA%' and pendaftaran.penjamin.JENIS = 2) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_periksa_bpjs"),
-                            DB::raw("SUM(case when (master.tindakan.JENIS != 4 and pendaftaran.penjamin.JENIS = 2) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_pelayanan_bpjs"),
+                            DB::raw("SUM(case when (master.tindakan.JENIS != 4 and pendaftaran.penjamin.JENIS = 2 and pembayaran.rincian_tagihan.JENIS != 1) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_pelayanan_bpjs"),
                             DB::raw("SUM(case when (pembayaran.rincian_tagihan.JENIS = 1 and pendaftaran.penjamin.JENIS = 2) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as karcis_bpjs"),
                             // DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 8 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as jasa_raharja"),
                             // DB::raw("SUM(case when pendaftaran.penjamin.JENIS = 1 then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as umum"),
@@ -124,9 +126,9 @@ class RawatJalanResource extends Resource
                 //     ->money('IDR')
                 //     ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
                 TotalColumn::make('pendapatan')
-                    // ->label('Total Pendapatan')
-                    // ->money('IDR')
-                    // ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
+                // ->label('Total Pendapatan')
+                // ->money('IDR')
+                // ->summarize(Sum::make()->label('Total Pendapatan')->money('IDR')),
             ])
             ->filters([
                 Filter::make('created_at')
@@ -157,7 +159,9 @@ class RawatJalanResource extends Resource
                         return $indicators;
                     }),
             ])
-            ->actions([])
+            ->actions([
+
+            ])
             ->bulkActions([]);
     }
 
