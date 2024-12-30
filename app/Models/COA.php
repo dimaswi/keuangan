@@ -11,7 +11,7 @@ class COA extends Model
 
     protected $connection = 'mysql';
 
-    protected $table = 'COA';
+    protected $table = 'coa';
 
     protected $primaryKey = 'id';
 

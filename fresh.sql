@@ -533,7 +533,7 @@ CREATE TABLE IF NOT EXISTS `jurnal_umums` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table keuanganv2.jurnal_umums: ~0 rows (approximately)
+-- Dumping data for table keuanganv2.jurnal_umums: ~2 rows (approximately)
 INSERT INTO `jurnal_umums` (`id`, `kode_coa`, `kredit`, `debit`, `tanggal`, `created_at`, `updated_at`) VALUES
 	(1, '44', '96533', '0', '2024-12-17 17:18:18', '2024-12-17 03:18:18', '2024-12-17 03:18:18'),
 	(2, '44', '143700', '0', '2024-12-17 17:19:37', '2024-12-17 03:19:37', '2024-12-17 03:19:37');
@@ -596,7 +596,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `users_email_unique` (`nip`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table keuanganv2.users: ~0 rows (approximately)
+-- Dumping data for table keuanganv2.users: ~1 rows (approximately)
 INSERT INTO `users` (`id`, `name`, `nip`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
 	(1, 'dimas', '12345', NULL, '$2y$10$C4RZ3dpTS0x2GCHNx9k0L.a3KqcvQ8OXzpPkfs6rJJCzdgbbR7sG6', NULL, '2024-12-16 22:00:32', '2024-12-16 22:00:32');
 
