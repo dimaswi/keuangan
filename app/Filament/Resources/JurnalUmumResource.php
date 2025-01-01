@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\JurnalUmumResource\Pages;
 use App\Filament\Resources\JurnalUmumResource\RelationManagers;
 use App\Models\JurnalUmum;
+use App\Tables\Columns\JurnalUmum\FirstCoaColumn;
+use App\Tables\Columns\JurnalUmum\TanggalColumn;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+
 
 class JurnalUmumResource extends Resource
 {
@@ -37,11 +40,24 @@ class JurnalUmumResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated(false)
+            ->recordUrl(
+                function () {
+                    return false;
+                }
+            )
+            ->modifyQueryUsing(
+                function (Builder $query): Builder {
+                    return $query->orderBy('tanggal', 'asc');
+
+                }
+            )
             ->columns([
-                TextColumn::make('coa.ID_COA')
-                    ->badge()
-                    ->label('Kode Akun'),
-                TextColumn::make('coa.DESKRIPSI')
+                TanggalColumn::make('tanggal')
+                    ->label('Tanggal'),
+                FirstCoaColumn::make('first_coa.DESKRIPSI')
+                    ->label('Nama Akun'),
+                TextColumn::make('second_coa.DESKRIPSI')
                     ->label('Nama Akun'),
                 TextColumn::make('debit')
                     ->money('IDR'),
@@ -51,12 +67,8 @@ class JurnalUmumResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-
-            ])
-            ->bulkActions([
-
-            ]);
+            ->actions([])
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

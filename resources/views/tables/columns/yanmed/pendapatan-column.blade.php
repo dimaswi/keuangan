@@ -10,7 +10,7 @@
         <div style="margin-left: 20px;">
             Rp. {{ number_format($getRecord()->karcis_umum) }}.00
 
-            <x-filament::modal>
+            <x-filament::modal width="5xl" id="coa">
                 <x-slot name="trigger">
                     <p style="color: blue">
                         Tambahkan Coa
@@ -18,22 +18,16 @@
                 </x-slot>
 
                 <x-slot name="heading">
-                    Tambahakan COA
+                    Pendapatan Karcis Umum
                 </x-slot>
 
-                <x-slot name="description">
-
-                    {{-- Rp. {{ number_format($getRecord()->karcis_umum) }}.00 --}}
-                    <livewire:coa.create-coa />
-                </x-slot>
-
-                {{-- Modal content --}}
+                <livewire:coa.create-coa :kredit="$getRecord()->karcis_umum" />
             </x-filament::modal>
         </div>
 
         <div style="margin-left: 20px;">
             Rp. {{ number_format($getRecord()->jasa_pelayanan_umum) }}.00
-            <x-filament::modal>
+            <x-filament::modal width="5xl" id="coa">
                 <x-slot name="trigger">
                     <p style="color: blue">
                         Tambahkan Coa
@@ -41,20 +35,16 @@
                 </x-slot>
 
                 <x-slot name="heading">
-                    Modal heading
+                    Pendapatan Jasa Pelayanan Umum
                 </x-slot>
 
-                <x-slot name="description">
-                    Rp. {{ number_format($getRecord()->jasa_pelayanan_umum) }}.00
-                </x-slot>
-
-                {{-- Modal content --}}
+                <livewire:coa.create-coa :kredit="$getRecord()->jasa_pelayanan_umum" />
             </x-filament::modal>
         </div>
 
         <div style="margin-left: 20px;">
             Rp. {{ number_format($getRecord()->jasa_periksa_umum) }}.00
-            <x-filament::modal>
+            <x-filament::modal width="5xl" id="coa">
                 <x-slot name="trigger">
                     <p style="color: blue">
                         Tambahkan Coa
@@ -62,14 +52,10 @@
                 </x-slot>
 
                 <x-slot name="heading">
-                    Modal heading
+                    Pendapatan Jasa Periksa Umum
                 </x-slot>
 
-                <x-slot name="description">
-                    Rp. {{ number_format($getRecord()->jasa_periksa_umum) }}.00
-                </x-slot>
-
-                {{-- Modal content --}}
+                <livewire:coa.create-coa :kredit="$getRecord()->jasa_periksa_umum" />
             </x-filament::modal>
         </div>
     </div>
@@ -80,7 +66,8 @@
         </div>
         <div style="margin-left: 20px;">
             Rp. {{ number_format($getRecord()->karcis_bpjs) }}.00
-            <x-filament::modal>
+
+            <x-filament::modal width="5xl" id="coa">
                 <x-slot name="trigger">
                     <p style="color: blue">
                         Tambahkan Coa
@@ -88,20 +75,17 @@
                 </x-slot>
 
                 <x-slot name="heading">
-                    Modal heading
+                    Pendapatan Karcis BPJS
                 </x-slot>
 
-                <x-slot name="description">
-                    Rp. {{ number_format($getRecord()->karcis_bpjs) }}.00
-                </x-slot>
-
-                {{-- Modal content --}}
+                <livewire:coa.create-coa :kredit="$getRecord()->karcis_bpjs" />
             </x-filament::modal>
         </div>
 
         <div style="margin-left: 20px;">
             Rp. {{ number_format($getRecord()->jasa_pelayanan_bpjs) }}.00
-            <x-filament::modal>
+
+            <x-filament::modal width="5xl" id="coa">
                 <x-slot name="trigger">
                     <p style="color: blue">
                         Tambahkan Coa
@@ -109,20 +93,17 @@
                 </x-slot>
 
                 <x-slot name="heading">
-                    Modal heading
+                    Pendapatan Jasa Pelayanan BPJS
                 </x-slot>
 
-                <x-slot name="description">
-                    Rp. {{ number_format($getRecord()->jasa_pelayanan_bpjs) }}.00
-                </x-slot>
-
-                {{-- Modal content --}}
+                <livewire:coa.create-coa :kredit="$getRecord()->jasa_pelayanan_bpjs" />
             </x-filament::modal>
         </div>
 
         <div style="margin-left: 20px;">
             Rp. {{ number_format($getRecord()->jasa_periksa_bpjs) }}.00
-            <x-filament::modal>
+
+            <x-filament::modal width="5xl" id="coa">
                 <x-slot name="trigger">
                     <p style="color: blue">
                         Tambahkan Coa
@@ -130,14 +111,10 @@
                 </x-slot>
 
                 <x-slot name="heading">
-                    Modal heading
+                    Pendapatan Jasa Periksa BPJS
                 </x-slot>
 
-                <x-slot name="description">
-                    Rp. {{ number_format($getRecord()->jasa_periksa_bpjs) }}.00
-                </x-slot>
-
-                {{-- Modal content --}}
+                <livewire:coa.create-coa :kredit="$getRecord()->jasa_periksa_bpjs" />
             </x-filament::modal>
         </div>
     </div>

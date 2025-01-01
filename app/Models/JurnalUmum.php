@@ -15,15 +15,21 @@ class JurnalUmum extends Model
 
     protected $fillable =
     [
-        'kode_coa',
+        'primary_coa',
+        'secondary_coa',
         'kredit',
         'debit',
-        'periode_awal',
-        'periode_akhir',
+        'tanggal',
+        'keterangan'
     ];
 
-    public function coa()
+    public function first_coa()
     {
-        return $this->belongsTo(COA::class, 'kode_coa', 'ID_COA');
+        return $this->belongsTo(COA::class, 'primary_coa', 'ID_COA');
+    }
+
+    public function second_coa()
+    {
+        return $this->belongsTo(COA::class, 'secondary_coa', 'ID_COA');
     }
 }
