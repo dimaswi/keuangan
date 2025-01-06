@@ -19,6 +19,7 @@ use App\Tables\Columns\PerPasien\TindakanColumn;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -67,6 +68,8 @@ class PendapatanPerPasienResource extends Resource
                     return $query
                         ->leftJoin('pembayaran.tagihan', 'pembayaran.tagihan.ID', '=', 'pembayaran.rincian_tagihan.TAGIHAN')
                         ->leftJoin('master.pasien', 'master.pasien.NORM', '=', 'pembayaran.tagihan.REF')
+                        ->leftJoin('pembayaran.tagihan_pendaftaran', 'pembayaran.rincian_tagihan.TAGIHAN', '=', 'pembayaran.tagihan_pendaftaran.TAGIHAN')
+                        ->leftJoin('pendaftaran.tujuan_pasien', 'pendaftaran.tujuan_pasien.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
                         ->leftJoin('master.tarif_administrasi', function ($join) {
                             $join->on('pembayaran.rincian_tagihan.TARIF_ID', 'master.tarif_administrasi.ID')
                                 ->where('pembayaran.rincian_tagihan.JENIS', 1);
@@ -150,6 +153,18 @@ class PendapatanPerPasienResource extends Resource
                     ->form([
                         DatePicker::make('tanggal_awal')->default(Carbon::now('Asia/Jakarta')),
                         DatePicker::make('tanggal_akhir'),
+                        Select::make('ruangan')->options([
+                            '11103' => 'Instalasi Gawat Darurat',
+                            '11102' => 'Rawat Inap',
+                            '113010101' => 'Poli Umum',
+                            '111010401' => 'Poli Spesialis Penyakit Dalam',
+                            '111010501' => 'Poli Spesialis Anak',
+                            '111010601' => 'Poli Spesialis Bedah',
+                            '111010701' => 'Poli Spesialis Kandungan',
+                            '11201' => 'Laboratorium',
+                            '11202' => 'Radiologi',
+                            // Add your ruangan options here
+                        ])
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -160,6 +175,10 @@ class PendapatanPerPasienResource extends Resource
                             ->when(
                                 $data['tanggal_akhir'],
                                 fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '<=', $date),
+                            )
+                            ->when(
+                                $data['ruangan'],
+                                fn(Builder $query, $ruangan): Builder => $query->where('pendaftaran.tujuan_pasien.RUANGAN' ,'LIKE', '%'.$ruangan.'%'),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
