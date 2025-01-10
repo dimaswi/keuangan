@@ -6,7 +6,7 @@
             </x-slot>
 
             <x-slot name="heading">
-                Detail Administrasi {{ $getRecord()->pasien }}
+                Detail Administrasi {{ $getRecord()->ruangan }}
             </x-slot>
 
             <x-filament::fieldset>

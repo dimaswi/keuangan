@@ -7,6 +7,7 @@ use App\Filament\Keuangan\Resources\PendapatanPerPasienResource\RelationManagers
 use App\Models\Pendapatan;
 use App\Models\PendapatanPerPasien;
 use App\Models\Rincian;
+use App\Models\User;
 use App\Tables\Columns\PerPasien\AdministrasiColumn;
 use App\Tables\Columns\PerPasien\DokterColumn;
 use App\Tables\Columns\PerPasien\LaboratoriumColumn;
@@ -16,6 +17,7 @@ use App\Tables\Columns\PerPasien\RadiologiColumn;
 use App\Tables\Columns\PerPasien\SaranaColumn;
 use App\Tables\Columns\PerPasien\SaranaTotalColumn;
 use App\Tables\Columns\PerPasien\TindakanColumn;
+use App\Tables\Columns\PerPasien\TotalColumn;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -34,17 +36,17 @@ class PendapatanPerPasienResource extends Resource
 {
     protected static ?string $model = Rincian::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationLabel = 'Pendapatan Per Pasien';
+    protected static ?string $navigationLabel = 'Bukti Kas Masuk';
 
-    protected static ?string $modelLabel = 'Pendapatan Per Pasien ';
+    protected static ?string $modelLabel = 'Bukti Kas Masuk ';
 
-    protected static ?string $navigationParentItem = 'Pendapatan';
+    // protected static ?string $navigationParentItem = 'Bukti Kas Masuk';
 
     protected static ?string $navigationGroup = 'Keuangan';
 
-    // protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
@@ -56,6 +58,12 @@ class PendapatanPerPasienResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $transaksi_kasir = DB::connection('simgos')
+            ->table('transaksi_kasir')
+            ->where('TUTUP', '!=', null)
+            ->latest('BUKA')
+            ->first();
+
         return $table
             ->paginated(false)
             ->recordUrl(
@@ -70,6 +78,7 @@ class PendapatanPerPasienResource extends Resource
                         ->leftJoin('master.pasien', 'master.pasien.NORM', '=', 'pembayaran.tagihan.REF')
                         ->leftJoin('pembayaran.tagihan_pendaftaran', 'pembayaran.rincian_tagihan.TAGIHAN', '=', 'pembayaran.tagihan_pendaftaran.TAGIHAN')
                         ->leftJoin('pendaftaran.tujuan_pasien', 'pendaftaran.tujuan_pasien.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
+                        ->leftJoin('master.ruangan', 'pendaftaran.tujuan_pasien.RUANGAN', '=', 'master.ruangan.ID')
                         ->leftJoin('master.tarif_administrasi', function ($join) {
                             $join->on('pembayaran.rincian_tagihan.TARIF_ID', 'master.tarif_administrasi.ID')
                                 ->where('pembayaran.rincian_tagihan.JENIS', 1);
@@ -105,6 +114,8 @@ class PendapatanPerPasienResource extends Resource
                         ->select(
                             'pembayaran.rincian_tagihan.TAGIHAN',
                             'master.pasien.NAMA as pasien',
+                            'pembayaran.tagihan.TOTAL as total_tagihan',
+                            'master.ruangan.DESKRIPSI as ruangan',
                             DB::raw("SUM(case when pembayaran.rincian_tagihan.JENIS = 1  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tarif_administrasi"),
                             DB::raw("SUM(case when pembayaran.rincian_tagihan.JENIS = 2  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tarif_ruang_rawat"),
                             DB::raw("SUM(case when pembayaran.rincian_tagihan.JENIS = 4  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tarif_obat"),
@@ -133,6 +144,7 @@ class PendapatanPerPasienResource extends Resource
                             DB::raw("SUM(case when ( master.tindakan.JENIS != 7 and master.tindakan.JENIS != 8 ) then pembayaran.rincian_tagihan.JUMLAH * master.tarif_tindakan.PARAMEDIS end) as tarif_tindakan_paramedis"),
                             DB::raw("SUM(case when ( master.tindakan.JENIS != 7 and master.tindakan.JENIS != 8 ) then pembayaran.rincian_tagihan.JUMLAH * master.tarif_tindakan.NON_MEDIS end) as tarif_tindakan_non_medis"),
                         )
+                        ->limit(5)
                         ->groupBy('pembayaran.rincian_tagihan.TAGIHAN')
                     ;
                 }
@@ -144,6 +156,7 @@ class PendapatanPerPasienResource extends Resource
                 ObatColumn::make('obat')->label('BHP'),
                 DokterColumn::make('dokter'),
                 ParamedisColumn::make('paramedis'),
+                TotalColumn::make('total_tagihan')
             ])
             ->contentFooter(
                 view('tables.columns.per-pasien.footer')
@@ -151,8 +164,22 @@ class PendapatanPerPasienResource extends Resource
             ->filters([
                 Filter::make('created_at')
                     ->form([
-                        DatePicker::make('tanggal_awal')->default(Carbon::now('Asia/Jakarta')),
-                        DatePicker::make('tanggal_akhir'),
+                        // DatePicker::make('tanggal_awal')->default(Carbon::now('Asia/Jakarta')),
+                        // DatePicker::make('tanggal_akhir'),
+                        Select::make('shift')
+                            ->default(
+                                $transaksi_kasir->NOMOR
+                            )
+                            ->options(
+                                DB::connection('simgos')
+                                    ->table('transaksi_kasir')
+                                    ->leftJoin('aplikasi.pengguna', 'pembayaran.transaksi_kasir.KASIR', '=', 'aplikasi.pengguna.ID')
+                                    // ->get()
+                                    ->where('pembayaran.transaksi_kasir.STATUS', 2)
+                                    ->orderBy('pembayaran.transaksi_kasir.BUKA', 'desc')
+                                    ->limit(10)
+                                    ->pluck('aplikasi.pengguna.NAMA', 'pembayaran.transaksi_kasir.NOMOR')
+                            ),
                         Select::make('ruangan')->options([
                             '11103' => 'Instalasi Gawat Darurat',
                             '11102' => 'Rawat Inap',
@@ -167,31 +194,44 @@ class PendapatanPerPasienResource extends Resource
                         ])
                     ])
                     ->query(function (Builder $query, array $data): Builder {
+
+                        $data_shift = DB::connection('simgos')
+                            ->table('transaksi_kasir')
+                            ->where('pembayaran.transaksi_kasir.NOMOR', $data['shift'])
+                            ->first();
+
+                        // dd($data_shift);
+
                         return $query
+                            // ->when(
+                            //     $data['tanggal_awal'],
+                            //     fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '>=', $date),
+                            // )
+                            // ->when(
+                            //     $data['tanggal_akhir'],
+                            //     fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '<=', $date),
+                            // );
                             ->when(
-                                $data['tanggal_awal'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '>=', $date),
-                            )
-                            ->when(
-                                $data['tanggal_akhir'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '<=', $date),
+                                $data['shift'],
+                                fn(Builder $query, $shift): Builder => $query->whereBetween('pembayaran.tagihan.TANGGAL', [$data_shift->BUKA, $data_shift->TUTUP])
                             )
                             ->when(
                                 $data['ruangan'],
-                                fn(Builder $query, $ruangan): Builder => $query->where('pendaftaran.tujuan_pasien.RUANGAN' ,'LIKE', '%'.$ruangan.'%'),
+                                fn(Builder $query, $ruangan): Builder => $query->where('pendaftaran.tujuan_pasien.RUANGAN', 'LIKE', '%' . $ruangan . '%'),
                             );
                     })
-                    ->indicateUsing(function (array $data): array {
-                        $indicators = [];
-                        if ($data['tanggal_awal'] ?? null) {
-                            $indicators['tanggal_awal'] = 'Order from ' . Carbon::parse($data['tanggal_awal'])->toFormattedDateString();
-                        }
-                        if ($data['tanggal_akhir'] ?? null) {
-                            $indicators['tanggal_akhir'] = 'Order until ' . Carbon::parse($data['tanggal_akhir'])->toFormattedDateString();
-                        }
+                // ->indicateUsing(function (array $data): array {
+                //     $indicators = [];
+                //     if ($data['tanggal_awal'] ?? null) {
+                //         $indicators['tanggal_awal'] = 'Order from ' . Carbon::parse($data['tanggal_awal'])->toFormattedDateString();
+                //     }
+                //     if ($data['tanggal_akhir'] ?? null) {
+                //         $indicators['tanggal_akhir'] = 'Order until ' . Carbon::parse($data['tanggal_akhir'])->toFormattedDateString();
+                //     }
 
-                        return $indicators;
-                    }),
+                //     return $indicators;
+                // }),
+
             ])
             ->actions([])
             ->bulkActions([]);
