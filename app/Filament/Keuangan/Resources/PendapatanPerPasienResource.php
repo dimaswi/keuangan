@@ -26,6 +26,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -47,6 +48,10 @@ class PendapatanPerPasienResource extends Resource
     protected static ?string $navigationGroup = 'Keuangan';
 
     protected static ?int $navigationSort = 2;
+
+    public $karcis;
+
+    public $form_coa = true;
 
     public static function form(Form $form): Form
     {
@@ -79,9 +84,18 @@ class PendapatanPerPasienResource extends Resource
                         ->leftJoin('pembayaran.tagihan_pendaftaran', 'pembayaran.rincian_tagihan.TAGIHAN', '=', 'pembayaran.tagihan_pendaftaran.TAGIHAN')
                         ->leftJoin('pendaftaran.tujuan_pasien', 'pendaftaran.tujuan_pasien.NOPEN', '=', 'pembayaran.tagihan_pendaftaran.PENDAFTARAN')
                         ->leftJoin('master.ruangan', 'pendaftaran.tujuan_pasien.RUANGAN', '=', 'master.ruangan.ID')
+                        ->join('pembayaran.pembayaran_tagihan', 'pembayaran.rincian_tagihan.TAGIHAN', '=', 'pembayaran.pembayaran_tagihan.TAGIHAN')
                         ->leftJoin('master.tarif_administrasi', function ($join) {
                             $join->on('pembayaran.rincian_tagihan.TARIF_ID', 'master.tarif_administrasi.ID')
                                 ->where('pembayaran.rincian_tagihan.JENIS', 1);
+                        })
+                        ->leftJoin('layanan.tindakan_medis', function ($join) {
+                            $join->on('pembayaran.rincian_tagihan.REF_ID', 'layanan.tindakan_medis.ID')
+                                ->where('pembayaran.rincian_tagihan.JENIS', 3);
+                        })
+                        ->leftJoin('pendaftaran.kunjungan', function ($join) {
+                            $join->on('layanan.tindakan_medis.KUNJUNGAN', 'pendaftaran.kunjungan.NOMOR')
+                                ->where('pembayaran.rincian_tagihan.JENIS', 3);
                         })
                         // ->leftJoin('master.administrasi', function ($join) {
                         //     $join->on('master.tarif_administrasi.ADMINISTRASI', 'master.administrasi.ID')
@@ -115,7 +129,9 @@ class PendapatanPerPasienResource extends Resource
                             'pembayaran.rincian_tagihan.TAGIHAN',
                             'master.pasien.NAMA as pasien',
                             'pembayaran.tagihan.TOTAL as total_tagihan',
-                            'master.ruangan.DESKRIPSI as ruangan',
+                            'master.ruangan.ID as ruangan',
+                            DB::raw("SUM(case when ( pembayaran.rincian_tagihan.JENIS = 3 and pendaftaran.kunjungan.RUANGAN LIKE '%11103%' ) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tindakan_ugd_ranap"),
+                            DB::raw("SUM(case when ( pembayaran.rincian_tagihan.JENIS = 1 and pembayaran.rincian_tagihan.TARIF_ID = 24 ) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as administrasi_ugd_ranap"),
                             DB::raw("SUM(case when pembayaran.rincian_tagihan.JENIS = 1  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tarif_administrasi"),
                             DB::raw("SUM(case when pembayaran.rincian_tagihan.JENIS = 2  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tarif_ruang_rawat"),
                             DB::raw("SUM(case when pembayaran.rincian_tagihan.JENIS = 4  then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tarif_obat"),
@@ -144,12 +160,16 @@ class PendapatanPerPasienResource extends Resource
                             DB::raw("SUM(case when ( master.tindakan.JENIS != 7 and master.tindakan.JENIS != 8 ) then pembayaran.rincian_tagihan.JUMLAH * master.tarif_tindakan.PARAMEDIS end) as tarif_tindakan_paramedis"),
                             DB::raw("SUM(case when ( master.tindakan.JENIS != 7 and master.tindakan.JENIS != 8 ) then pembayaran.rincian_tagihan.JUMLAH * master.tarif_tindakan.NON_MEDIS end) as tarif_tindakan_non_medis"),
                         )
-                        ->limit(5)
+                        // ->where('pembayaran.rincian_tagihan.TAGIHAN', 2501160016)
+                        // ->where('pembayaran.rincian_tagihan.TAGIHAN', 2501160029)
+                        ->where('pembayaran.tagihan_pendaftaran.UTAMA', 1)
+                        // ->where('pembayaran.tagihan.STATUS', 2)
                         ->groupBy('pembayaran.rincian_tagihan.TAGIHAN')
                     ;
                 }
             )
             ->columns([
+                // TextColumn::make('TAGIHAN'),
                 TextColumn::make('pasien'),
                 AdministrasiColumn::make('karcis'),
                 SaranaColumn::make('sarana'),
@@ -192,7 +212,7 @@ class PendapatanPerPasienResource extends Resource
                             '11202' => 'Radiologi',
                             // Add your ruangan options here
                         ])
-                    ])
+                    ])->columns(2)
                     ->query(function (Builder $query, array $data): Builder {
 
                         $data_shift = DB::connection('simgos')
@@ -213,7 +233,7 @@ class PendapatanPerPasienResource extends Resource
                             // );
                             ->when(
                                 $data['shift'],
-                                fn(Builder $query, $shift): Builder => $query->whereBetween('pembayaran.tagihan.TANGGAL', [$data_shift->BUKA, $data_shift->TUTUP])
+                                fn(Builder $query, $shift): Builder => $query->whereBetween('pembayaran.pembayaran_tagihan.TANGGAL', [$data_shift->BUKA, $data_shift->TUTUP])
                             )
                             ->when(
                                 $data['ruangan'],
@@ -232,7 +252,8 @@ class PendapatanPerPasienResource extends Resource
                 //     return $indicators;
                 // }),
 
-            ])
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(2)
             ->actions([])
             ->bulkActions([]);
     }

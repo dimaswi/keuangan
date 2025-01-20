@@ -99,7 +99,8 @@ class AddToJurnalUmum extends Component implements HasForms
 
     public function create(): void
     {
-        // dd($this->form->getState()['kredit_coa']);
+        // dd($this->total);
+        dd($this->form->getState());
         foreach ($this->form->getState()['kredit_coa'] as $value) {
             JurnalUmum::create([
                 'primary_coa' => $value['primary_coa'],
