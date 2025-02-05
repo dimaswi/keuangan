@@ -409,7 +409,7 @@
                                                 Pendapatan {{ $key }}
                                             </x-slot>
 
-                                            <livewire:bukti-kas-masuk.addtojurnalumum :key="Str::random()" :nama="$key" :total="$value" />
+                                            <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()" :nama="$key" :total="$value" />
                                         </x-filament::modal>
                                     </center>
                                 </td>
@@ -464,7 +464,7 @@
                                                 Pendapatan Sarana {{ $key }}
                                             </x-slot>
 
-                                            <livewire:bukti-kas-masuk.addtojurnalumum :key="Str::random()" :nama="$key" :total="$value" />
+                                            <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()" :nama="$key" :total="$value" />
                                         </x-filament::modal>
                                     </center>
                                 </td>
@@ -520,7 +520,7 @@
                                                 Pendapatan BHP {{ $key }}
                                             </x-slot>
 
-                                            <livewire:bukti-kas-masuk.addtojurnalumum :key="Str::random()" :nama="$key" :total="$value" />
+                                            <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()" :nama="$key" :total="$value" />
                                         </x-filament::modal>
                                     </center>
                                 </td>
@@ -575,7 +575,7 @@
                                                 Pendapatan Dokter {{ $key }}
                                             </x-slot>
 
-                                            <livewire:bukti-kas-masuk.addtojurnalumum :key="Str::random()" :nama="$key" :total="$value" />
+                                            <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()" :nama="$key" :total="$value" />
                                         </x-filament::modal>
                                     </center>
                                 </td>
@@ -630,7 +630,7 @@
                                                 Pendapatan Perawat {{ $key }}
                                             </x-slot>
 
-                                            <livewire:bukti-kas-masuk.addtojurnalumum :key="Str::random()" :nama="$key" :total="$value" />
+                                            <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()" :nama="$key" :total="$value" />
                                         </x-filament::modal>
                                     </center>
                                 </td>
@@ -696,7 +696,11 @@
                                                     Pendapatan Total {{ $key }}
                                                 </x-slot>
 
-                                                @livewire('bukti-kas-masuk.add-to-jurnal-umum', ['key' => Str::random(), 'nama' => $key, 'total' => $value])
+                                                <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()"
+                                                    :nama="$key" :total="$value" />
+
+                                                {{-- @livewire('bukti-kas-masuk.add-to-jurnal-umum', ['key' => Str::random(), 'nama' => $key, 'total' => $value]) --}}
+
                                             </x-filament::modal>
                                         </center>
                                     </td>
@@ -747,7 +751,11 @@
                                                     Pendapatan Total {{ $key }}
                                                 </x-slot>
 
-                                                    @livewire('bukti-kas-masuk.add-to-jurnal-umum', ['key' => Str::random(), 'nama' => $key, 'total' => $value])
+                                                <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()"
+                                                    :nama="$key" :total="$value" />
+
+                                                {{-- @livewire('bukti-kas-masuk.add-to-jurnal-umum', ['key' => Str::random(), 'nama' => $key, 'total' => $value]) --}}
+
                                             </x-filament::modal>
                                         </center>
                                     </td>
