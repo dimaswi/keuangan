@@ -68,7 +68,6 @@ class CreateCoa extends Component implements HasForms
 
     public function create(): void
     {
-        // dd($this->form->getState());
 
         $available_coa_date = JurnalUmum::where('primary_coa', $this->form->getState()['primary_coa'])
             ->where('secondary_coa', $this->form->getState()['secondary_coa'])

@@ -737,7 +737,7 @@
                                     </td>
                                     <td>
                                         <center>
-                                            <x-filament::modal width="5xl">
+                                            <x-filament::modal width="5xl" id="modal-coa">
                                                 <x-slot name="trigger">
                                                     <x-filament::button>
                                                         <center> + </center>

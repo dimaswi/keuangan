@@ -1,7 +1,6 @@
 @php
     $coa = App\Models\JurnalUmum::whereDate('tanggal', $getRecord()->tanggal)
         ->where('primary_coa', $getRecord()->primary_coa)
-        // ->where('secondary_coa', $getRecord()->secondary_coa)
         ->first();
 @endphp
 
