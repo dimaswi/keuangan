@@ -696,8 +696,7 @@
                                                     Pendapatan Total {{ $key }}
                                                 </x-slot>
 
-                                                <livewire:buktikasmasuk.addtojurnalumum :key="Str::random()"
-                                                    :nama="$key" :total="$value" />
+                                                @livewire('buktikasmasuk.add-to-jurnal-umum', ['key' => Str::random(), 'nama' => $key, 'total' => $value])
                                             </x-filament::modal>
                                         </center>
                                     </td>
@@ -748,8 +747,7 @@
                                                     Pendapatan Total {{ $key }}
                                                 </x-slot>
 
-                                                <livewire:buktikasmasuk.addtojurnalumum :key="Str::random()"
-                                                    :nama="$key" :total="$value" />
+                                                    @livewire('buktikasmasuk.add-to-jurnal-umum', ['key' => Str::random(), 'nama' => $key, 'total' => $value])
                                             </x-filament::modal>
                                         </center>
                                     </td>
