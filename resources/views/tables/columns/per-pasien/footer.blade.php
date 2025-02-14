@@ -641,15 +641,11 @@
             </div>
         </x-filament::modal>
     </td> --}}
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    {{-- <td></td> --}}
     <td>
-        <x-filament::modal width="5xl" sticky-header slide-over>
+       <x-filament::modal width="5xl" sticky-header slide-over>
             <x-slot name="trigger">
-                {{ number_format(array_sum($list_total)) }}
+                Rp. {{ number_format(array_sum($list_total)) }}
             </x-slot>
             <x-slot name="heading">
                 Pendapatan Total
@@ -766,5 +762,4 @@
                 </x-filament::section>
             </div>
         </x-filament::modal>
-    </td>
 </div>

@@ -68,7 +68,7 @@ class JurnalUmumResource extends Resource
                 FirstCoaColumn::make('first_coa.DESKRIPSI')
                     ->label('Nama Akun'),
                 SecondCoaColumn::make('second_coa.DESKRIPSI')
-                    ->label('Nama Akun'),
+                    ->label(' '),
                 TextColumn::make('debit')
                     ->money('IDR'),
                 TextColumn::make('kredit')
@@ -81,10 +81,60 @@ class JurnalUmumResource extends Resource
                 //
             ])
             ->actions([
-                DeleteAction::make(),
-                Action::make('tambah')
-                    ->label('Tambah')
+                Action::make('kredit')
+                    ->label('Kredit')
                     ->color('success')
+                    ->icon('heroicon-o-plus-circle')
+                    ->form([
+                        Select::make('secondary_coa')
+                            ->label('Jurnal Umum')
+                            ->live()
+                            ->searchable()
+                            ->options(
+                                COA::all()->pluck('DESKRIPSI', 'ID_COA')
+                            )
+                            ->required(),
+                        TextInput::make('kredit')
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters(',')
+                            ->placeholder('Masukan Nominal Kredit')
+                            ->numeric(),
+                        DatePicker::make('tanggal')
+                            ->required()
+                    ])
+                    ->hidden(
+                        function (JurnalUmum $record) {
+                            return $record->primary_coa != $record->secondary_coa;
+                        }
+                    )
+                    ->action(
+                        function (array $data, JurnalUmum $record) {
+                            try {
+                                JurnalUmum::create([
+                                    'primary_coa' => $record->primary_coa,
+                                    'secondary_coa' => $data['secondary_coa'],
+                                    'kredit' => $data['kredit'],
+                                    'debit' => 0,
+                                    'tanggal' => $data['tanggal'],
+                                ]);
+
+                                Notification::make()
+                                    ->title('Berhasil Ditambahkan!')
+                                    ->body('Data jurnal umum berhasil ditambahkan!')
+                                    ->success()
+                                    ->send();
+                            } catch (\Throwable $th) {
+                                Notification::make()
+                                    ->title('Gagal!')
+                                    ->body($th->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }
+                    ),
+                Action::make('debit')
+                    ->label('Debit')
+                    ->color('warning')
                     ->icon('heroicon-o-plus-circle')
                     ->form([
                         Select::make('secondary_coa')
@@ -132,7 +182,8 @@ class JurnalUmumResource extends Resource
                                     ->send();
                             }
                         }
-                    )
+                    ),
+                DeleteAction::make(),
             ])
             ->bulkActions([]);
     }

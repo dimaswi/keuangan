@@ -121,6 +121,8 @@ class PendapatanPerPasienResource extends Resource
                         //     $join->on('inventory.harga_barang.BARANG', 'inventory.barang.ID')
                         //         ->where('pembayaran.rincian_tagihan.JENIS', 4);
                         // })
+                        ->leftJoin('transaksi_kasir', 'transaksi_kasir.NOMOR', '=', 'pembayaran.pembayaran_tagihan.TRANSAKSI_KASIR_NOMOR')
+                        ->leftJoin('aplikasi.pengguna', 'pembayaran.transaksi_kasir.KASIR', '=', 'aplikasi.pengguna.ID')
                         ->leftJoin('master.tarif_o2', function ($join) {
                             $join->on('pembayaran.rincian_tagihan.TARIF_ID', 'master.tarif_o2.ID')
                                 ->where('pembayaran.rincian_tagihan.JENIS', 6);
@@ -128,6 +130,7 @@ class PendapatanPerPasienResource extends Resource
                         ->select(
                             'pembayaran.rincian_tagihan.TAGIHAN',
                             'master.pasien.NAMA as pasien',
+                            'aplikasi.pengguna.NAMA as nama_kasir',
                             'pembayaran.tagihan.TOTAL as total_tagihan',
                             'master.ruangan.ID as ruangan',
                             DB::raw("SUM(case when ( pembayaran.rincian_tagihan.JENIS = 3 and pendaftaran.kunjungan.RUANGAN LIKE '%11103%' ) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tindakan_ugd_ranap"),
@@ -164,18 +167,20 @@ class PendapatanPerPasienResource extends Resource
                         // ->where('pembayaran.rincian_tagihan.TAGIHAN', 2501160029)
                         ->where('pembayaran.tagihan_pendaftaran.UTAMA', 1)
                         // ->where('pembayaran.tagihan.STATUS', 2)
-                        ->groupBy('pembayaran.rincian_tagihan.TAGIHAN')
+                        // ->groupBy('pembayaran.rincian_tagihan.TAGIHAN')
+                        ->groupBy('nama_kasir')
                     ;
                 }
             )
             ->columns([
                 // TextColumn::make('TAGIHAN'),
-                TextColumn::make('pasien'),
-                AdministrasiColumn::make('karcis'),
-                SaranaColumn::make('sarana'),
-                ObatColumn::make('obat')->label('BHP'),
-                DokterColumn::make('dokter'),
-                ParamedisColumn::make('paramedis'),
+                TextColumn::make('nama_kasir'),
+                // // TextColumn::make('pasien'),
+                // AdministrasiColumn::make('karcis'),
+                // SaranaColumn::make('sarana'),
+                // ObatColumn::make('obat')->label('BHP'),
+                // DokterColumn::make('dokter'),
+                // ParamedisColumn::make('paramedis'),
                 TotalColumn::make('total_tagihan')
             ])
             ->contentFooter(
@@ -184,22 +189,22 @@ class PendapatanPerPasienResource extends Resource
             ->filters([
                 Filter::make('created_at')
                     ->form([
-                        // DatePicker::make('tanggal_awal')->default(Carbon::now('Asia/Jakarta')),
-                        // DatePicker::make('tanggal_akhir'),
-                        Select::make('shift')
-                            ->default(
-                                $transaksi_kasir->NOMOR
-                            )
-                            ->options(
-                                DB::connection('simgos')
-                                    ->table('transaksi_kasir')
-                                    ->leftJoin('aplikasi.pengguna', 'pembayaran.transaksi_kasir.KASIR', '=', 'aplikasi.pengguna.ID')
-                                    // ->get()
-                                    ->where('pembayaran.transaksi_kasir.STATUS', 2)
-                                    ->orderBy('pembayaran.transaksi_kasir.BUKA', 'desc')
-                                    ->limit(10)
-                                    ->pluck('aplikasi.pengguna.NAMA', 'pembayaran.transaksi_kasir.NOMOR')
-                            ),
+                        DatePicker::make('tanggal_awal')->default(Carbon::now('Asia/Jakarta')),
+                        DatePicker::make('tanggal_akhir'),
+                        // Select::make('shift')
+                        //     ->default(
+                        //         $transaksi_kasir->NOMOR
+                        //     )
+                        //     ->options(
+                        //         DB::connection('simgos')
+                        //             ->table('transaksi_kasir')
+                        //             ->leftJoin('aplikasi.pengguna', 'pembayaran.transaksi_kasir.KASIR', '=', 'aplikasi.pengguna.ID')
+                        //             // ->get()
+                        //             ->where('pembayaran.transaksi_kasir.STATUS', 2)
+                        //             ->orderBy('pembayaran.transaksi_kasir.BUKA', 'desc')
+                        //             ->limit(10)
+                        //             ->pluck('aplikasi.pengguna.NAMA', 'pembayaran.transaksi_kasir.NOMOR')
+                        //     ),
                         Select::make('ruangan')->options([
                             '11103' => 'Instalasi Gawat Darurat',
                             '11102' => 'Rawat Inap',
@@ -212,29 +217,29 @@ class PendapatanPerPasienResource extends Resource
                             '11202' => 'Radiologi',
                             // Add your ruangan options here
                         ])
-                    ])->columns(2)
+                    ])->columns(3)
                     ->query(function (Builder $query, array $data): Builder {
 
-                        $data_shift = DB::connection('simgos')
-                            ->table('transaksi_kasir')
-                            ->where('pembayaran.transaksi_kasir.NOMOR', $data['shift'])
-                            ->first();
+                        // $data_shift = DB::connection('simgos')
+                        //     ->table('transaksi_kasir')
+                        //     ->where('pembayaran.transaksi_kasir.NOMOR', $data['shift'])
+                        //     ->first();
 
                         // dd($data_shift);
 
                         return $query
-                            // ->when(
-                            //     $data['tanggal_awal'],
-                            //     fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '>=', $date),
-                            // )
-                            // ->when(
-                            //     $data['tanggal_akhir'],
-                            //     fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '<=', $date),
-                            // );
                             ->when(
-                                $data['shift'],
-                                fn(Builder $query, $shift): Builder => $query->whereBetween('pembayaran.pembayaran_tagihan.TANGGAL', [$data_shift->BUKA, $data_shift->TUTUP])
+                                $data['tanggal_awal'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '>=', $date),
                             )
+                            ->when(
+                                $data['tanggal_akhir'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '<=', $date),
+                            )
+                            // ->when(
+                            //     $data['shift'],
+                            //     fn(Builder $query, $shift): Builder => $query->whereBetween('pembayaran.pembayaran_tagihan.TANGGAL', [$data_shift->BUKA, $data_shift->TUTUP])
+                            // )
                             ->when(
                                 $data['ruangan'],
                                 fn(Builder $query, $ruangan): Builder => $query->where('pendaftaran.tujuan_pasien.RUANGAN', 'LIKE', '%' . $ruangan . '%'),
@@ -253,7 +258,7 @@ class PendapatanPerPasienResource extends Resource
                 // }),
 
             ], layout: FiltersLayout::AboveContent)
-            ->filtersFormColumns(2)
+            ->filtersFormColumns(1)
             ->actions([])
             ->bulkActions([]);
     }

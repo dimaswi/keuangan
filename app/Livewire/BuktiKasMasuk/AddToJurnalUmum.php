@@ -69,34 +69,34 @@ class AddToJurnalUmum extends Component implements HasForms
                     ->maxItems(1)
                     ->columnSpan('full'),
 
-                TableRepeater::make('debit_coa')
-                    ->schema([
-                        Select::make('secondary_coa')
-                            ->label('Kode Akun')
-                            ->searchable()
-                            ->required()
-                            ->options(\App\Models\COA::all()->pluck('DESKRIPSI', 'ID_COA')),
-                        // Select::make('secondary_coa')
-                        //     ->label('Kode Akun')
-                        //     ->searchable()
-                        //     ->required()
-                        //     ->options(\App\Models\COA::all()->pluck('DESKRIPSI', 'ID_COA')),
-                        TextInput::make('debit')
-                            ->label('Debit')
-                            ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
-                            ->numeric()
-                            ->default(0)
-                            ->required(),
-                        TextInput::make('keterangan')
-                            ->placeholder('Keterangan')
-                    ])
-                    ->colStyles([
-                        'secondary_coa' => 'width: 450px;',
-                    ])
-                    ->label(' ')
-                    // ->maxItems(1)
-                    ->columnSpan('full'),
+                // TableRepeater::make('debit_coa')
+                //     ->schema([
+                //         Select::make('secondary_coa')
+                //             ->label('Kode Akun')
+                //             ->searchable()
+                //             ->required()
+                //             ->options(\App\Models\COA::all()->pluck('DESKRIPSI', 'ID_COA')),
+                //         // Select::make('secondary_coa')
+                //         //     ->label('Kode Akun')
+                //         //     ->searchable()
+                //         //     ->required()
+                //         //     ->options(\App\Models\COA::all()->pluck('DESKRIPSI', 'ID_COA')),
+                //         TextInput::make('debit')
+                //             ->label('Debit')
+                //             ->mask(RawJs::make('$money($input)'))
+                //             ->stripCharacters(',')
+                //             ->numeric()
+                //             ->default(0)
+                //             ->required(),
+                //         TextInput::make('keterangan')
+                //             ->placeholder('Keterangan')
+                //     ])
+                //     ->colStyles([
+                //         'secondary_coa' => 'width: 450px;',
+                //     ])
+                //     ->label(' ')
+                //     // ->maxItems(1)
+                //     ->columnSpan('full'),
             ])
             ->statePath('data');
     }
@@ -123,31 +123,31 @@ class AddToJurnalUmum extends Component implements HasForms
                     'debit' => 0,
                     'tanggal' => $this->form->getState()['kredit_coa'][0]['tanggal'],
                 ]);
-                foreach ($this->form->getState()['debit_coa'] as $key => $value) {
-                    $available_coa_date = JurnalUmum::with('second_coa')->where('primary_coa', $this->form->getState()['kredit_coa'][0]['primary_coa'])
-                        ->where('secondary_coa', $value['secondary_coa'])
-                        ->whereDate('tanggal', $this->form->getState()['kredit_coa'][0]['tanggal'])
-                        ->select('secondary_coa')
-                        ->first();
+                // foreach ($this->form->getState()['debit_coa'] as $key => $value) {
+                //     $available_coa_date = JurnalUmum::with('second_coa')->where('primary_coa', $this->form->getState()['kredit_coa'][0]['primary_coa'])
+                //         ->where('secondary_coa', $value['secondary_coa'])
+                //         ->whereDate('tanggal', $this->form->getState()['kredit_coa'][0]['tanggal'])
+                //         ->select('secondary_coa')
+                //         ->first();
 
-                    if ($available_coa_date) {
-                        Notification::make()
-                            ->title('Data debit sudah ada dalam jurnal!')
-                            ->body('Data ke-' . $key + 1 . ' dengan nama debit ' . $available_coa_date->second_coa->DESKRIPSI . ' sudah ada dalam data, silahkan cek dan tambahkan secara manual pada menu jurnal umum!')
-                            ->danger()
-                            ->send();
+                //     if ($available_coa_date) {
+                //         Notification::make()
+                //             ->title('Data debit sudah ada dalam jurnal!')
+                //             ->body('Data ke-' . $key + 1 . ' dengan nama debit ' . $available_coa_date->second_coa->DESKRIPSI . ' sudah ada dalam data, silahkan cek dan tambahkan secara manual pada menu jurnal umum!')
+                //             ->danger()
+                //             ->send();
 
-                        $this->dispatch('close-modal', id: 'modal-coa');
-                    } else {
-                        JurnalUmum::create([
-                            'primary_coa' => $this->form->getState()['kredit_coa'][0]['primary_coa'],
-                            'secondary_coa' => $value['secondary_coa'],
-                            'kredit' => 0,
-                            'debit' => $value['debit'],
-                            'tanggal' => $this->form->getState()['kredit_coa'][0]['tanggal'],
-                        ]);
-                    }
-                }
+                //         $this->dispatch('close-modal', id: 'modal-coa');
+                //     } else {
+                //         JurnalUmum::create([
+                //             'primary_coa' => $this->form->getState()['kredit_coa'][0]['primary_coa'],
+                //             'secondary_coa' => $value['secondary_coa'],
+                //             'kredit' => 0,
+                //             'debit' => $value['debit'],
+                //             'tanggal' => $this->form->getState()['kredit_coa'][0]['tanggal'],
+                //         ]);
+                //     }
+                // }
                 Notification::make()
                     ->title('Berhasil ditambahkan!)')
                     ->body('Data kredit/denit berhasil ditambahkan ke dalam jurnal umum')
