@@ -28,6 +28,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -169,61 +170,62 @@ class PendapatanPerPasienResource extends Resource
                         // ->where('pembayaran.rincian_tagihan.TAGIHAN', 2501160029)
                         ->where('pembayaran.tagihan_pendaftaran.UTAMA', 1)
                         // ->where('pembayaran.tagihan.STATUS', 2)
-                        // ->groupBy('pembayaran.rincian_tagihan.TAGIHAN')
-                        ->groupBy('nama_kasir')
+                        ->groupBy('pembayaran.rincian_tagihan.TAGIHAN')
+                        // ->groupBy('nama_kasir')
                     ;
                 }
             )
             ->columns([
-                // TextColumn::make('TAGIHAN'),
-                TextColumn::make('nama_kasir'),
-                // TextColumn::make('tanggal_penerimaan_kasir'),
-                // // TextColumn::make('pasien'),
-                // AdministrasiColumn::make('karcis'),
-                // SaranaColumn::make('sarana'),
-                // ObatColumn::make('obat')->label('BHP'),
-                // DokterColumn::make('dokter'),
-                // ParamedisColumn::make('paramedis'),
+                TextColumn::make('pasien')
+                    ->extraHeaderAttributes([
+                        'style' => 'width: 70%;text-align: left'
+                    ]),
                 TextColumn::make('total_tagihan')
                     ->formatStateUsing(
                         fn(Rincian $record) => 'Rp. ' . number_format(
-                            $record->tarif_ruang_rawat +
+                            $record->tarif_administrasi +
+                                $record->tarif_ruang_rawat +
+                                $record->tarif_obat +
                                 $record->tarif_radiologi_sarana +
-                                $record->tarif_laboratorium_sarana +
-                                $record->tarif_tindakan_sarana +
-                                $record->tarif_administrasi +
+                                $record->tarif_radiologi_bhp +
+                                $record->tarif_radiologi_dokter_operator +
+                                $record->tarif_radiologi_dokter_anastesi +
+                                $record->tarif_radiologi_dokter_lainnya +
                                 $record->tarif_radiologi_penata_anastesi +
                                 $record->tarif_radiologi_paramedis +
                                 $record->tarif_radiologi_non_medis +
-                                $record->tarif_laboratorium_penata_anastesi +
-                                $record->tarif_laboratorium_paramedis +
-                                $record->tarif_laboratorium_dokter_non_medis +
-                                $record->tarif_tindakan_penata_anastesi +
-                                $record->tarif_tindakan_paramedis +
-                                $record->tarif_tindakan_dokter_non_medis +
-                                $record->tarif_radiologi_dokter_operator +
-                                $record->tarif_radiologi_dokter_anastesi +
-                                $record->tarif_radiologi_lainnya +
+                                $record->tarif_laboratorium_sarana +
+                                $record->tarif_laboratorium_bhp +
                                 $record->tarif_laboratorium_dokter_operator +
                                 $record->tarif_laboratorium_dokter_anastesi +
                                 $record->tarif_laboratorium_dokter_lainnya +
+                                $record->tarif_laboratorium_penata_anastesi +
+                                $record->tarif_laboratorium_paramedis +
+                                $record->tarif_laboratorium_non_medis +
+                                $record->tarif_tindakan_sarana +
+                                $record->tarif_tindakan_bhp +
                                 $record->tarif_tindakan_dokter_operator +
                                 $record->tarif_tindakan_dokter_anastesi +
                                 $record->tarif_tindakan_dokter_lainnya +
-                                $record->tarif_obat +
-                                $record->tarif_radiologi_bhp +
-                                $record->tarif_laboratorium_bhp +
-                                $record->tarif_tindakan_bhp
+                                $record->tarif_tindakan_penata_anastesi +
+                                $record->tarif_tindakan_paramedis +
+                                $record->tarif_tindakan_non_medis
                         )
-                    ),
-                TextColumn::make('penerimaan_kasir')
-                    ->formatStateUsing(
-                        fn(Rincian $record) => 'Rp. ' . number_format($record->penerimaan_kasir)
-                    ),
+                    )
+                    ->extraHeaderAttributes([
+                        'style' => 'width: 20%;'
+                    ]),
+
             ])
             ->contentFooter(
-                view('tables.columns.per-pasien.footer')
+                view('tables.columns.perPasien.footer')
             )
+            ->groups([
+                Group::make('nama_kasir')
+                    ->label('NAMA KASIR  ')
+                    ->collapsible()
+                    // ->isCollapsible(true),
+            ])
             ->filters([
                 Filter::make('created_at')
                     ->form([
@@ -274,14 +276,14 @@ class PendapatanPerPasienResource extends Resource
                                 $data['tanggal_akhir'],
                                 fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.pembayaran_tagihan.TANGGAL', '<=', $date),
                             );
-                            // ->when(
-                            //     $data['shift'],
-                            //     fn(Builder $query, $shift): Builder => $query->whereBetween('pembayaran.pembayaran_tagihan.TANGGAL', [$data_shift->BUKA, $data_shift->TUTUP])
-                            // )
-                            // ->when(
-                            //     $data['ruangan'],
-                            //     fn(Builder $query, $ruangan): Builder => $query->where('pendaftaran.tujuan_pasien.RUANGAN', 'LIKE', '%' . $ruangan . '%'),
-                            // );
+                        // ->when(
+                        //     $data['shift'],
+                        //     fn(Builder $query, $shift): Builder => $query->whereBetween('pembayaran.pembayaran_tagihan.TANGGAL', [$data_shift->BUKA, $data_shift->TUTUP])
+                        // )
+                        // ->when(
+                        //     $data['ruangan'],
+                        //     fn(Builder $query, $ruangan): Builder => $query->where('pendaftaran.tujuan_pasien.RUANGAN', 'LIKE', '%' . $ruangan . '%'),
+                        // );
                     })
                 // ->indicateUsing(function (array $data): array {
                 //     $indicators = [];
