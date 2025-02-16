@@ -49,8 +49,8 @@ class AddToJurnalUmum extends Component implements HasForms
                         //     ->searchable()
                         //     ->required()
                         //     ->options(\App\Models\COA::all()->pluck('DESKRIPSI', 'ID_COA')),
-                        TextInput::make('kredit')
-                            ->label('Kredit')
+                        TextInput::make('debit')
+                            ->label('Debit')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
@@ -119,8 +119,8 @@ class AddToJurnalUmum extends Component implements HasForms
                 JurnalUmum::create([
                     'primary_coa' => $this->form->getState()['kredit_coa'][0]['primary_coa'],
                     'secondary_coa' => $this->form->getState()['kredit_coa'][0]['primary_coa'],
-                    'kredit' =>  $this->form->getState()['kredit_coa'][0]['kredit'],
-                    'debit' => 0,
+                    'debit' =>  $this->form->getState()['kredit_coa'][0]['debit'],
+                    'kredit' => 0,
                     'tanggal' => $this->form->getState()['kredit_coa'][0]['tanggal'],
                 ]);
                 // foreach ($this->form->getState()['debit_coa'] as $key => $value) {
