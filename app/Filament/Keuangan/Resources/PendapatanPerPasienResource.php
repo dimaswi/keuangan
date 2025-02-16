@@ -131,6 +131,8 @@ class PendapatanPerPasienResource extends Resource
                             'pembayaran.rincian_tagihan.TAGIHAN',
                             'master.pasien.NAMA as pasien',
                             'aplikasi.pengguna.NAMA as nama_kasir',
+                            'pembayaran.transaksi_kasir.TOTAL as penerimaan_kasir',
+                            // 'pembayaran.pembayaran_tagihan.TANGGAL as tanggal_penerimaan_kasir',
                             'pembayaran.tagihan.TOTAL as total_tagihan',
                             'master.ruangan.ID as ruangan',
                             DB::raw("SUM(case when ( pembayaran.rincian_tagihan.JENIS = 3 and pendaftaran.kunjungan.RUANGAN LIKE '%11103%' ) then pembayaran.rincian_tagihan.JUMLAH * pembayaran.rincian_tagihan.TARIF end) as tindakan_ugd_ranap"),
@@ -175,13 +177,49 @@ class PendapatanPerPasienResource extends Resource
             ->columns([
                 // TextColumn::make('TAGIHAN'),
                 TextColumn::make('nama_kasir'),
+                // TextColumn::make('tanggal_penerimaan_kasir'),
                 // // TextColumn::make('pasien'),
                 // AdministrasiColumn::make('karcis'),
                 // SaranaColumn::make('sarana'),
                 // ObatColumn::make('obat')->label('BHP'),
                 // DokterColumn::make('dokter'),
                 // ParamedisColumn::make('paramedis'),
-                TotalColumn::make('total_tagihan')
+                TextColumn::make('total_tagihan')
+                    ->formatStateUsing(
+                        fn(Rincian $record) => 'Rp. ' . number_format(
+                            $record->tarif_ruang_rawat +
+                                $record->tarif_radiologi_sarana +
+                                $record->tarif_laboratorium_sarana +
+                                $record->tarif_tindakan_sarana +
+                                $record->tarif_administrasi +
+                                $record->tarif_radiologi_penata_anastesi +
+                                $record->tarif_radiologi_paramedis +
+                                $record->tarif_radiologi_non_medis +
+                                $record->tarif_laboratorium_penata_anastesi +
+                                $record->tarif_laboratorium_paramedis +
+                                $record->tarif_laboratorium_dokter_non_medis +
+                                $record->tarif_tindakan_penata_anastesi +
+                                $record->tarif_tindakan_paramedis +
+                                $record->tarif_tindakan_dokter_non_medis +
+                                $record->tarif_radiologi_dokter_operator +
+                                $record->tarif_radiologi_dokter_anastesi +
+                                $record->tarif_radiologi_lainnya +
+                                $record->tarif_laboratorium_dokter_operator +
+                                $record->tarif_laboratorium_dokter_anastesi +
+                                $record->tarif_laboratorium_dokter_lainnya +
+                                $record->tarif_tindakan_dokter_operator +
+                                $record->tarif_tindakan_dokter_anastesi +
+                                $record->tarif_tindakan_dokter_lainnya +
+                                $record->tarif_obat +
+                                $record->tarif_radiologi_bhp +
+                                $record->tarif_laboratorium_bhp +
+                                $record->tarif_tindakan_bhp
+                        )
+                    ),
+                TextColumn::make('penerimaan_kasir')
+                    ->formatStateUsing(
+                        fn(Rincian $record) => 'Rp. ' . number_format($record->penerimaan_kasir)
+                    ),
             ])
             ->contentFooter(
                 view('tables.columns.per-pasien.footer')
@@ -205,18 +243,18 @@ class PendapatanPerPasienResource extends Resource
                         //             ->limit(10)
                         //             ->pluck('aplikasi.pengguna.NAMA', 'pembayaran.transaksi_kasir.NOMOR')
                         //     ),
-                        Select::make('ruangan')->options([
-                            '11103' => 'Instalasi Gawat Darurat',
-                            '11102' => 'Rawat Inap',
-                            '113010101' => 'Poli Umum',
-                            '111010401' => 'Poli Spesialis Penyakit Dalam',
-                            '111010501' => 'Poli Spesialis Anak',
-                            '111010601' => 'Poli Spesialis Bedah',
-                            '111010701' => 'Poli Spesialis Kandungan',
-                            '11201' => 'Laboratorium',
-                            '11202' => 'Radiologi',
-                            // Add your ruangan options here
-                        ])
+                        // Select::make('ruangan')->options([
+                        //     '11103' => 'Instalasi Gawat Darurat',
+                        //     '11102' => 'Rawat Inap',
+                        //     '113010101' => 'Poli Umum',
+                        //     '111010401' => 'Poli Spesialis Penyakit Dalam',
+                        //     '111010501' => 'Poli Spesialis Anak',
+                        //     '111010601' => 'Poli Spesialis Bedah',
+                        //     '111010701' => 'Poli Spesialis Kandungan',
+                        //     '11201' => 'Laboratorium',
+                        //     '11202' => 'Radiologi',
+                        //     // Add your ruangan options here
+                        // ])
                     ])->columns(3)
                     ->query(function (Builder $query, array $data): Builder {
 
@@ -230,20 +268,20 @@ class PendapatanPerPasienResource extends Resource
                         return $query
                             ->when(
                                 $data['tanggal_awal'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.pembayaran_tagihan.TANGGAL', '>=', $date),
                             )
                             ->when(
                                 $data['tanggal_akhir'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.tagihan.TANGGAL', '<=', $date),
-                            )
+                                fn(Builder $query, $date): Builder => $query->whereDate('pembayaran.pembayaran_tagihan.TANGGAL', '<=', $date),
+                            );
                             // ->when(
                             //     $data['shift'],
                             //     fn(Builder $query, $shift): Builder => $query->whereBetween('pembayaran.pembayaran_tagihan.TANGGAL', [$data_shift->BUKA, $data_shift->TUTUP])
                             // )
-                            ->when(
-                                $data['ruangan'],
-                                fn(Builder $query, $ruangan): Builder => $query->where('pendaftaran.tujuan_pasien.RUANGAN', 'LIKE', '%' . $ruangan . '%'),
-                            );
+                            // ->when(
+                            //     $data['ruangan'],
+                            //     fn(Builder $query, $ruangan): Builder => $query->where('pendaftaran.tujuan_pasien.RUANGAN', 'LIKE', '%' . $ruangan . '%'),
+                            // );
                     })
                 // ->indicateUsing(function (array $data): array {
                 //     $indicators = [];

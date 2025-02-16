@@ -9,8 +9,8 @@
 
     </div>
 @else
-    <div style="margin-left: 10px">
-        <p>
+    <div style="margin-left: 10px; text-align: left">
+        <p style="font-size: 18px">
             {{ $getState() }}
         </p>
     </div>

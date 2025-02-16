@@ -4,7 +4,7 @@
         // ->where('secondary_coa', $getRecord()->secondary_coa)
         ->first();
 
-    $tanggal = date("d-m-Y", strtotime($getRecord()->tanggal));
+    $tanggal = date('d-m-Y', strtotime($getRecord()->tanggal));
 @endphp
 
 @if ($coa->id < $getRecord()->id)
@@ -14,7 +14,9 @@
 @else
     <div style="margin-left: 10px">
         <p>
-            {{ $tanggal }}
+            <x-filament::badge size="xl">
+                {{ $tanggal }}
+            </x-filament::badge>
         </p>
     </div>
 @endif

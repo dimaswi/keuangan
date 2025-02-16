@@ -643,7 +643,7 @@
     </td> --}}
     {{-- <td></td> --}}
     <td>
-       <x-filament::modal width="5xl" sticky-header slide-over>
+        <x-filament::modal width="5xl" sticky-header slide-over>
             <x-slot name="trigger">
                 Rp. {{ number_format(array_sum($list_total)) }}
             </x-slot>
@@ -666,9 +666,9 @@
                             <th>
                                 Nominal
                             </th>
-                            <th>
+                            {{-- <th>
                                 <center>Coa</center>
-                            </th>
+                            </th> --}}
                         </thead>
                         <tbody>
                             @foreach ($list_total as $key => $value)
@@ -679,7 +679,7 @@
                                     <td>
                                         {{ number_format($value) }}
                                     </td>
-                                    <td>
+                                    {{-- <td>
                                         <center>
                                             <x-filament::modal width="5xl">
                                                 <x-slot name="trigger">
@@ -695,11 +695,9 @@
                                                 <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()"
                                                     :nama="$key" :total="$value" />
 
-                                                {{-- @livewire('bukti-kas-masuk.add-to-jurnal-umum', ['key' => Str::random(), 'nama' => $key, 'total' => $value]) --}}
-
                                             </x-filament::modal>
                                         </center>
-                                    </td>
+                                    </td> --}}
                                 </tr>
                             @endforeach
                         </tbody>
@@ -721,9 +719,9 @@
                             <th>
                                 Nominal
                             </th>
-                            <th>
+                            {{-- <th>
                                 <center>Coa</center>
-                            </th>
+                            </th> --}}
                         </thead>
                         <tbody>
                             @foreach ($list_total_unit as $key => $value)
@@ -734,7 +732,7 @@
                                     <td>
                                         {{ number_format($value) }}
                                     </td>
-                                    <td>
+                                    {{-- <td>
                                         <center>
                                             <x-filament::modal width="5xl" id="modal-coa">
                                                 <x-slot name="trigger">
@@ -750,16 +748,34 @@
                                                 <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()"
                                                     :nama="$key" :total="$value" />
 
-                                                {{-- @livewire('bukti-kas-masuk.add-to-jurnal-umum', ['key' => Str::random(), 'nama' => $key, 'total' => $value]) --}}
-
                                             </x-filament::modal>
                                         </center>
-                                    </td>
+                                    </td> --}}
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </x-filament::section>
             </div>
+
+            <div>
+                <x-filament::modal width="5xl">
+                    <x-slot name="trigger">
+                        <x-filament::button color="success" icon="heroicon-o-banknotes">
+                            Jurnalkan
+                        </x-filament::button>
+                    </x-slot>
+
+                    <x-slot name="heading">
+                        Tambahkan Total Pendapatan
+                    </x-slot>
+
+                    <livewire:bukti-kas-masuk.add-to-jurnal-umum :key="Str::random()" :nama="$key"
+                        :total="array_sum($list_total)" />
+                </x-filament::modal>
+            </div>
         </x-filament::modal>
+    </td>
+
+
 </div>

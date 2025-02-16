@@ -64,15 +64,30 @@ class JurnalUmumResource extends Resource
             )
             ->columns([
                 TanggalColumn::make('tanggal')
-                    ->label('Tanggal'),
+                    ->label('Tanggal')
+                    ->extraHeaderAttributes([
+                        'style' => 'width:12%; text-align: left',
+                    ]),
                 FirstCoaColumn::make('first_coa.DESKRIPSI')
-                    ->label('Nama Akun'),
+                    ->label('Nama Akun')
+                    ->extraHeaderAttributes([
+                        'style' => 'width:20%; text-align: left',
+                    ]),
                 SecondCoaColumn::make('second_coa.DESKRIPSI')
-                    ->label(' '),
+                    ->label(' ')
+                    ->extraHeaderAttributes([
+                        'style' => 'width:20%; text-align: left',
+                    ]),
                 TextColumn::make('debit')
-                    ->money('IDR'),
+                    ->alignCenter()
+                    ->formatStateUsing(
+                        fn(JurnalUmum $record) => 'Rp. ' . number_format($record->debit)
+                    ),
                 TextColumn::make('kredit')
-                    ->money('IDR'),
+                    ->alignCenter()
+                    ->formatStateUsing(
+                        fn(JurnalUmum $record) => 'Rp. ' . number_format($record->kredit)
+                    ),
             ])
             ->contentFooter(
                 view('tables.columns.keuangan.jurnal-umum.footer')
